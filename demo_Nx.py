@@ -5,6 +5,7 @@ import torch
 import numpy as np
 import argparse
 from imageio import mimsave
+import pathlib
 
 '''==========import from our code=========='''
 sys.path.append('.')
@@ -40,23 +41,45 @@ model.eval()
 model.device()
 
 
+# print(f'=========================Start Generating=========================')
+# I0 = cv2.imread('example/img1.jpg')
+# I2 = cv2.imread('example/img2.jpg') 
+# I0_ = (torch.tensor(I0.transpose(2, 0, 1)).cuda() / 255.).unsqueeze(0)
+# I2_ = (torch.tensor(I2.transpose(2, 0, 1)).cuda() / 255.).unsqueeze(0)
+# padder = InputPadder(I0_.shape, divisor=32)
+# I0_, I2_ = padder.pad(I0_, I2_)
+# images = [I0[:, :, ::-1]]
+# preds = model.multi_inference(I0_, I2_, TTA=TTA, time_list=[(i+1)*(1./args.n) for i in range(args.n - 1)], fast_TTA=TTA)
+# for pred in preds:
+#     images.append((padder.unpad(pred).detach().cpu().numpy().transpose(1, 2, 0) * 255.0).astype(np.uint8)[:, :, ::-1])
+# images.append(I2[:, :, ::-1])
+# 
+
+
+def InterFrameLoop(image1, image2, images):
+    print(f'===== Start Loop For {image1} and {image2} =====')
+    I0 = cv2.imread(image1)
+    I2 = cv2.imread(image2) 
+
+    I0_ = (torch.tensor(I0.transpose(2, 0, 1)).cuda() / 255.).unsqueeze(0)
+    I2_ = (torch.tensor(I2.transpose(2, 0, 1)).cuda() / 255.).unsqueeze(0)
+
+    padder = InputPadder(I0_.shape, divisor=32)
+    I0_, I2_ = padder.pad(I0_, I2_)
+
+    images = [I0[:, :, ::-1]]
+    preds = model.multi_inference(I0_, I2_, TTA=TTA, time_list=[(i+1)*(1./args.n) for i in range(args.n - 1)], fast_TTA=TTA)
+    for pred in preds:
+        images.append((padder.unpad(pred).detach().cpu().numpy().transpose(1, 2, 0) * 255.0).astype(np.uint8)[:, :, ::-1])
+    images.append(I2[:, :, ::-1])
+    print(f'===== End Loop for {image1} and {image2}  =====')
+
 print(f'=========================Start Generating=========================')
+images = []
+imagefiles =[f for f in pathlib.Path('./images/').iterdir() if f.is_file()]
+imagefiles.sort()
+for i in range(0, len(imagefiles), 2):
+    InterFrameLoop(imagefiles[i], imagefiles[i+1], images)
 
-I0 = cv2.imread('example/img1.jpg')
-I2 = cv2.imread('example/img2.jpg') 
-
-I0_ = (torch.tensor(I0.transpose(2, 0, 1)).cuda() / 255.).unsqueeze(0)
-I2_ = (torch.tensor(I2.transpose(2, 0, 1)).cuda() / 255.).unsqueeze(0)
-
-padder = InputPadder(I0_.shape, divisor=32)
-I0_, I2_ = padder.pad(I0_, I2_)
-
-images = [I0[:, :, ::-1]]
-preds = model.multi_inference(I0_, I2_, TTA=TTA, time_list=[(i+1)*(1./args.n) for i in range(args.n - 1)], fast_TTA=TTA)
-for pred in preds:
-    images.append((padder.unpad(pred).detach().cpu().numpy().transpose(1, 2, 0) * 255.0).astype(np.uint8)[:, :, ::-1])
-images.append(I2[:, :, ::-1])
 mimsave('example/out_Nx.gif', images, fps=args.n)
-
-
 print(f'=========================Done=========================')
