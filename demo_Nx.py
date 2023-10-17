@@ -55,8 +55,11 @@ model.device()
 # images.append(I2[:, :, ::-1])
 # 
 
+global images
+images =[]
 
-def InterFrameLoop(image1, image2, images):
+def InterFrameLoop(image1, image2):
+    global images
     print(f'===== Start Loop For {image1} and {image2} =====')
     I0 = cv2.imread(image1)
     I2 = cv2.imread(image2) 
@@ -67,7 +70,7 @@ def InterFrameLoop(image1, image2, images):
     padder = InputPadder(I0_.shape, divisor=32)
     I0_, I2_ = padder.pad(I0_, I2_)
 
-    images = [I0[:, :, ::-1]]
+    images.append[I0[:, :, ::-1]]
     preds = model.multi_inference(I0_, I2_, TTA=TTA, time_list=[(i+1)*(1./args.n) for i in range(args.n - 1)], fast_TTA=TTA)
     for pred in preds:
         images.append((padder.unpad(pred).detach().cpu().numpy().transpose(1, 2, 0) * 255.0).astype(np.uint8)[:, :, ::-1])
@@ -75,11 +78,11 @@ def InterFrameLoop(image1, image2, images):
     print(f'===== End Loop for {image1} and {image2}  =====')
 
 print(f'=========================Start Generating=========================')
-images = []
+
 imagefiles =[f for f in pathlib.Path('./images/').iterdir() if f.is_file()]
 imagefiles.sort()
 for i in range(0, len(imagefiles)-1):
-    InterFrameLoop( str(imagefiles[i].absolute()), str(imagefiles[i+1].absolute()), images)
+    InterFrameLoop( str(imagefiles[i].absolute()), str(imagefiles[i+1].absolute()))
 
-mimsave('example/out_Nx.gif', images, fps=args.n)
+mimsave('example/out_Nx.gif', images, fps=24)
 print(f'=========================Done=========================')
