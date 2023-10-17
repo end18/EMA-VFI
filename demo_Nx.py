@@ -78,7 +78,7 @@ print(f'=========================Start Generating=========================')
 images = []
 imagefiles =[f for f in pathlib.Path('./images/').iterdir() if f.is_file()]
 imagefiles.sort()
-for i in range(0, len(imagefiles)):
+for i in range(0, len(imagefiles)-1):
     InterFrameLoop( str(imagefiles[i].absolute()), str(imagefiles[i+1].absolute()), images)
 
 mimsave('example/out_Nx.gif', images, fps=args.n)
