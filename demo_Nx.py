@@ -70,7 +70,7 @@ def InterFrameLoop(image1, image2):
     padder = InputPadder(I0_.shape, divisor=32)
     I0_, I2_ = padder.pad(I0_, I2_)
 
-    images.append[I0[:, :, ::-1]]
+    images.append([I0[:, :, ::-1]])
     preds = model.multi_inference(I0_, I2_, TTA=TTA, time_list=[(i+1)*(1./args.n) for i in range(args.n - 1)], fast_TTA=TTA)
     for pred in preds:
         images.append((padder.unpad(pred).detach().cpu().numpy().transpose(1, 2, 0) * 255.0).astype(np.uint8)[:, :, ::-1])
