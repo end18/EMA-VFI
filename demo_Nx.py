@@ -84,5 +84,5 @@ imagefiles.sort()
 for i in range(0, len(imagefiles)-1):
     InterFrameLoop( str(imagefiles[i].absolute()), str(imagefiles[i+1].absolute()))
 
-mimsave('example/out_Nx.gif', images, fps=24)
+mimsave('example/out_Nx.gif', images, fps=args.n)
 print(f'=========================Done=========================')
